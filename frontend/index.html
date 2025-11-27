@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Stock News Sentiment Analyzer</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <h1>📈 Stock News Sentiment Analyzer</h1>
+        <p class="subtitle">Analyze stock market news headlines and articles</p>
+        
+        <div class="input-section">
+            <textarea 
+                id="textInput" 
+                placeholder="Enter stock news headline or article here..."
+                rows="6"
+            ></textarea>
+            <button id="analyzeBtn" onclick="analyze()">Analyze Sentiment</button>
+        </div>
+        
+        <div id="result" class="result"></div>
+        
+        <div class="info">
+            <h3>How it works:</h3>
+            <ul>
+                <li>Enter a stock market news headline or article</li>
+                <li>Click "Analyze Sentiment" to get Buy/Hold/Sell prediction</li>
+                <li>The model uses Naive Bayes with TF-IDF vectorization</li>
+            </ul>
+        </div>
+    </div>
+    
+    <script>
+        const API_URL = 'http://localhost:8000/predict';
+
+        async function analyze() {
+            console.log('🔍 Analyze function called!'); // Debug line
+            
+            const text = document.getElementById('textInput').value.trim();
+            const resultDiv = document.getElementById('result');
+            const button = document.getElementById('analyzeBtn');
+            
+            console.log('📝 Text input:', text); // Debug line
+            
+            if (!text) {
+                alert('Please enter some text to analyze!');
+                return;
+            }
+            
+            // Disable button and show loading
+            button.disabled = true;
+            button.textContent = 'Analyzing...';
+            resultDiv.style.display = 'none';
+            
+            try {
+                console.log('📡 Sending request to:', API_URL); // Debug line
+                
+                const response = await fetch(API_URL, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ text: text })
+                });
+                
+                console.log('✅ Response status:', response.status); // Debug line
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                
+                const data = await response.json();
+                console.log('📊 Response data:', data); // Debug line
+                
+                if (data.error) {
+                    resultDiv.className = 'result error show';
+                    resultDiv.style.display = 'block';
+                    resultDiv.innerHTML = `<div>${data.error}</div>`;
+                } else {
+                    resultDiv.className = `result ${data.sentiment.toLowerCase()} show`;
+                    resultDiv.style.display = 'block'; // Explicitly show the result
+                    
+                    let html = `<div>Sentiment: ${data.sentiment}</div>`;
+                    html += `<div class="confidence">Confidence: ${(data.confidence * 100).toFixed(2)}%</div>`;
+                    
+                    if (data.probabilities) {
+                        html += '<div class="probabilities">';
+                        html += '<strong>Probabilities:</strong><br>';
+                        for (const [label, prob] of Object.entries(data.probabilities)) {
+                            html += `<div>${label}: ${(prob * 100).toFixed(2)}%</div>`;
+                        }
+                        html += '</div>';
+                    }
+                    
+                    resultDiv.innerHTML = html;
+                    console.log('✅ Result displayed!', resultDiv.className, resultDiv.style.display);
+                }
+                
+            } catch (error) {
+                console.error('❌ Full error:', error); // Debug line
+                resultDiv.className = 'result error show';
+                resultDiv.style.display = 'block'; // Explicitly show the error
+                resultDiv.innerHTML = `
+                    <div>Error connecting to API</div>
+                    <div style="font-size: 14px; margin-top: 10px;">
+                        Error: ${error.message}<br><br>
+                        Make sure the FastAPI server is running:<br>
+                        <code>uvicorn api.main:app --reload</code>
+                    </div>
+                `;
+            } finally {
+                button.disabled = false;
+                button.textContent = 'Analyze Sentiment';
+            }
+        }
+
+        // Debug: Check if function is defined
+        console.log('✅ Script loaded! analyze function type:', typeof analyze);
+        
+        // Wait for page to load, then attach event listener as backup
+        window.addEventListener('DOMContentLoaded', function() {
+            console.log('📄 DOM loaded');
+            const btn = document.getElementById('analyzeBtn');
+            if (btn) {
+                console.log('🔘 Button found, ensuring click handler is attached');
+                // Remove any existing listeners and add fresh one
+                btn.onclick = analyze;
+            } else {
+                console.error('❌ Button not found!');
+            }
+        });
+    </script>
+</body>
+</html>
+
