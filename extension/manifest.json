@@ -1,9 +1,9 @@
 {
   "manifest_version": 3,
   "name": "Stock News Sentiment Analyzer",
-  "version": "1.0",
-  "description": "Analyze stock news sentiment in real-time on financial websites",
-  "permissions": ["activeTab"],
+  "version": "1.1",
+  "description": "Analyze stock news sentiment in real-time on financial websites with interactive controls",
+  "permissions": ["activeTab", "storage"],
   "host_permissions": ["http://localhost:8000/*", "https://*/*"],
   "content_scripts": [{
     "matches": ["<all_urls>"],
