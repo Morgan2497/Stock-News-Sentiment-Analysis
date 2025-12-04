@@ -2,35 +2,90 @@
 <html>
 <head>
     <meta charset="UTF-8">
-    <style>
-        body {
-            width: 300px;
-            padding: 20px;
-            font-family: Arial, sans-serif;
-        }
-        h1 {
-            font-size: 18px;
-            margin-bottom: 10px;
-        }
-        p {
-            font-size: 14px;
-            color: #666;
-        }
-        .status {
-            margin-top: 15px;
-            padding: 10px;
-            background: #f0f0f0;
-            border-radius: 5px;
-        }
-    </style>
+    <link rel="stylesheet" href="popup.css">
 </head>
 <body>
-    <h1>📈 Stock News Sentiment</h1>
-    <p>This extension analyzes stock news headlines on web pages.</p>
-    <div class="status">
-        <strong>Status:</strong> Active<br>
-        <small>Make sure the API is running on localhost:8000</small>
+    <div class="container">
+        <header>
+            <h1>📈 Stock Sentiment Analyzer</h1>
+            <div class="status-indicator" id="statusIndicator">
+                <span class="status-dot" id="statusDot"></span>
+                <span id="statusText">Checking...</span>
+            </div>
+        </header>
+
+        <div class="controls">
+            <div class="toggle-container">
+                <label class="toggle-switch">
+                    <input type="checkbox" id="enableToggle" checked>
+                    <span class="slider"></span>
+                </label>
+                <span class="toggle-label">Auto Analysis</span>
+            </div>
+            <button class="btn btn-primary" id="analyzeBtn">
+                <span class="btn-icon">🔍</span>
+                Analyze Now
+            </button>
+        </div>
+
+        <div class="stats-section">
+            <h3>Statistics</h3>
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-value" id="totalAnalyzed">0</div>
+                    <div class="stat-label">Headlines Analyzed</div>
+                </div>
+                <div class="stat-card buy">
+                    <div class="stat-value" id="buyCount">0</div>
+                    <div class="stat-label">Buy Signals</div>
+                </div>
+                <div class="stat-card hold">
+                    <div class="stat-value" id="holdCount">0</div>
+                    <div class="stat-label">Hold Signals</div>
+                </div>
+                <div class="stat-card sell">
+                    <div class="stat-value" id="sellCount">0</div>
+                    <div class="stat-label">Sell Signals</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="settings-section">
+            <h3>Settings</h3>
+            <div class="setting-item">
+                <label>
+                    <input type="checkbox" id="highlightToggle" checked>
+                    Highlight Headlines
+                </label>
+            </div>
+            <div class="setting-item">
+                <label>
+                    <input type="checkbox" id="showConfidenceToggle" checked>
+                    Show Confidence Scores
+                </label>
+            </div>
+            <div class="setting-item">
+                <label>
+                    Filter:
+                    <select id="filterSelect">
+                        <option value="all">All Sentiments</option>
+                        <option value="Buy">Buy Only</option>
+                        <option value="Hold">Hold Only</option>
+                        <option value="Sell">Sell Only</option>
+                    </select>
+                </label>
+            </div>
+        </div>
+
+        <div class="actions">
+            <button class="btn btn-secondary" id="resetBtn">Reset Stats</button>
+            <button class="btn btn-secondary" id="refreshBtn">Refresh Page</button>
+        </div>
+
+        <div class="footer">
+            <small id="apiStatus">API: Checking connection...</small>
+        </div>
     </div>
+    <script src="popup.js"></script>
 </body>
 </html>
-
