@@ -7,9 +7,25 @@ from sklearn.metrics import accuracy_score, classification_report, confusion_mat
 import pickle
 import os
 
-# Load data
+# Load data from multiple sources
 print("Loading data...")
-df = pd.read_csv('data/training_data.csv')
+df1 = pd.read_csv('data/training_data.csv')
+df2 = pd.read_csv('data/train1.csv')
+df3 = pd.read_csv('data/cleaned_output1.csv')
+
+# Combine all datasets
+print(f"  - training_data.csv: {len(df1)} rows")
+print(f"  - train1.csv: {len(df2)} rows")
+print(f"  - cleaned_output1.csv: {len(df3)} rows")
+df = pd.concat([df1, df2, df3], ignore_index=True)
+
+# Remove duplicates if any
+initial_len = len(df)
+df = df.drop_duplicates(subset=['text'], keep='first')
+if len(df) < initial_len:
+    print(f"  - Removed {initial_len - len(df)} duplicate rows")
+
+print(f"  - Total combined dataset: {len(df)} rows")
 
 # Clean text (simple: lowercase, remove punctuation)
 def clean_text(text):
