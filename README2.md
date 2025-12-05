@@ -148,43 +148,33 @@ Stock-News-Sentiment-Analysis/
 
 #### api/ Directory
 
-- **main.py**: FastAPI application that provides REST API endpoints. Handles HTTP requests, loads the trained model, processes text input, and returns sentiment predictions. Includes CORS middleware for frontend access and health check endpoints.
+- **main.py**: FastAPI app with the `/predict` endpoint, model loading, text processing, CORS, and health checks.
 
 #### data/ Directory
 
-- **training_data.csv**: Primary training dataset containing text samples and their corresponding sentiment labels (Buy, Hold, Sell). This is the main dataset used to train the sentiment analysis model.
-
-- **data_labeled.csv**: Alternative dataset with additional features including Reputation, Financial, Regulatory, Risks, Fundamentals, Conditions, Market, and Volatility scores. May be used for feature engineering or advanced analysis.
-
-- **collected/**: Directory containing raw news data collected from various financial news sources. Files are organized by source and date.
-
-- **processed/**: Directory containing processed and cleaned versions of collected news data, ready for analysis or training.
-
-- **tickers/**: Directory containing stock ticker information and symbol lists used for data collection and processing.
+- **training_data.csv**: Main dataset used to train the sentiment model.
+- **data_labeled.csv**: Dataset with extra financial features (optional for advanced analysis).
+- **collected/**: Raw financial news data.
+- **processed/**: Cleaned news data ready for analysis.
+- **tickers/**: Stock ticker symbol lists.
 
 #### extension/ Directory
 
-- **manifest.json**: Chrome extension configuration file that defines permissions, content scripts, and extension metadata. Uses Manifest V3 format.
-
-- **content.js**: Content script that runs on web pages to automatically detect and analyze news headlines. Sends text to the API and displays sentiment badges next to headlines.
-
-- **popup.html**: HTML interface for the extension popup that appears when users click the extension icon.
-
-- **icon.png**: Icon image displayed in the browser toolbar for the extension.
+- **manifest.json**: Chrome extension configuration (Manifest V3).
+- **content.js**: Script that analyzes headlines on supported websites.
+- **popup.html**: Interface shown when opening the extension.
+- **icon.png**: Extension toolbar icon.
 
 #### frontend/ Directory
 
-- **index.html**: Main web interface HTML file containing the sentiment analysis form, result display area, and embedded JavaScript code for API communication.
-
-- **style.css**: Cascading Style Sheets file defining the visual design, layout, colors, and responsive styling for the web interface.
-
-- **script.js**: JavaScript file containing frontend logic for handling user input, making API requests, and displaying results. Note: Currently the JavaScript is embedded directly in index.html.
+- **index.html**: Web interface for entering text and viewing predictions.
+- **style.css**: Styling for the web interface.
+- **script.js**: Logic for sending input to the API and displaying results.
 
 #### model/ Directory
 
-- **vectorizer.pkl**: Serialized TF-IDF vectorizer object saved after training. Used by the API to transform new text input into the same feature space as the training data.
-
-- **model.pkl**: Serialized trained Multinomial Naive Bayes classifier. Loaded by the API to make sentiment predictions on new text.
+- **vectorizer.pkl**: Saved TF-IDF vectorizer.
+- **model.pkl**: Saved Naive Bayes model.
 
 ## Usage
 
@@ -204,36 +194,24 @@ The `--reload` flag enables auto-reload on code changes during development.
 
 ### Using the Web Interface
 
-1. Ensure the API server is running (see above)
-
-2. Open `frontend/index.html` in your web browser
-
-3. Enter a stock market news headline or article in the text area
-
-4. Click "Analyze Sentiment" to get the prediction
-
-5. The result will display with:
-   - Sentiment classification (Buy/Hold/Sell)
+1. Make sure the API server is running.
+2. Open `frontend/index.html` in your browser.
+3. Enter a headline or article.
+4. Click **Analyze Sentiment**.
+5. The results will show:
+   - Buy / Hold / Sell
    - Confidence score
-   - Probability distribution for all classes
+   - Class probabilities
 
 ### Using the Chrome Extension
 
-1. Open Chrome and navigate to `chrome://extensions/`
+1. Go to `chrome://extensions/` in Chrome.
+2. Turn on **Developer mode**.
+3. Click **Load unpacked** and select the `extension/` folder.
+4. Visit a financial news site (MarketWatch, Reuters, Yahoo Finance).
+5. Headlines will automatically show sentiment tags.
 
-2. Enable "Developer mode" (toggle in top right)
-
-3. Click "Load unpacked"
-
-4. Select the `extension/` folder from this project
-
-5. The extension is now installed and active
-
-6. Visit financial news websites (e.g., MarketWatch, Reuters, Yahoo Finance)
-
-7. Headlines will be automatically analyzed and display sentiment badges
-
-Note: The API server must be running on `localhost:8000` for the extension to work.
+Note: The API must be running on `localhost:8000` for the extension to work.
 
 ### Testing the Model
 
@@ -359,61 +337,55 @@ python train.py
 
 ### Adding New Features
 
-- **Backend**: Modify `api/main.py` to add new endpoints or functionality
-- **Frontend**: Update `frontend/index.html`, `style.css`, or `script.js`
-- **Extension**: Modify `extension/content.js` or `manifest.json`
-- **Model**: Update `train.py` for model improvements
+- **Backend**: Update `api/main.py` for new endpoints or logic.
+- **Frontend**: Modify `frontend/index.html`, `style.css`, or `script.js`.
+- **Extension**: Update `extension/content.js` or `manifest.json`.
+- **Model**: Edit `train.py` to change or retrain the model.
 
 ## Contributing
 
-We welcome contributions to improve this project. Here's how you can contribute:
+Contributions are welcome. To contribute:
 
-### Getting Started
+1. Fork the repo  
+2. Create a branch: `git checkout -b feature-name`  
+3. Make and test your changes  
+4. Commit: `git commit -m "Description"`  
+5. Push: `git push origin feature-name`  
+6. Open a Pull Request  
 
-1. Fork the repository
-2. Create a new branch for your feature: `git checkout -b feature-name`
-3. Make your changes
-4. Test your changes thoroughly
-5. Commit your changes: `git commit -m "Description of changes"`
-6. Push to your branch: `git push origin feature-name`
-7. Open a Pull Request
+### What You Can Contribute
 
-### Areas for Contribution
-
-- Model improvements (accuracy, preprocessing, feature engineering)
-- Additional algorithms (SVM, Random Forest, Neural Networks)
-- Frontend enhancements (UI/UX improvements, additional features)
-- Extension features (more website support, batch analysis)
-- Documentation improvements
-- Bug fixes and performance optimizations
-- Additional training data collection
+- Model improvements  
+- New algorithms  
+- Frontend/UI updates  
+- Extension features  
+- Documentation updates  
+- Bug fixes + performance improvements  
+- More training data  
 
 ### Code Style
 
-- Follow PEP 8 for Python code
-- Use meaningful variable and function names
-- Add comments for complex logic
-- Keep functions focused and modular
+- Follow PEP 8  
+- Use clear names  
+- Comment complex logic  
+- Keep functions small and focused  
 
-### Testing
+### Testing Before Submitting
 
-Before submitting a pull request:
-- Test all functionality manually
-- Ensure the API server starts without errors
-- Verify the web interface works correctly
-- Test the Chrome extension on multiple websites
+- Run the API without errors  
+- Check the web interface  
+- Test the Chrome extension  
+- Verify predictions work as expected  
 
 ## Technologies
 
 ### Backend
-- **Python 3.8+**: Primary programming language
-- **scikit-learn**: Machine learning library
-  - Multinomial Naive Bayes classifier
-  - TF-IDF vectorization
-- **FastAPI**: Modern, fast web framework for building APIs
-- **Uvicorn**: ASGI server implementation
-- **Pydantic**: Data validation and settings management
-- **Pandas**: Data manipulation and analysis
+- **Python 3.8+**  
+- **scikit-learn** (Naive Bayes, TF-IDF)  
+- **FastAPI**  
+- **Uvicorn**  
+- **Pydantic**  
+- **Pandas**
 
 ### Frontend
 - **HTML5**: Markup language
@@ -446,80 +418,80 @@ Before submitting a pull request:
 
 ### Current Limitations
 
-- Model accuracy is moderate and can be improved
-- Confidence scores may be low for ambiguous text
-- Performance depends on similarity to training data
-- Best results with financial/stock market news
+- Moderate model accuracy
+- Low confidence on unclear or ambiguous text
+- Works best on finance-related news similar to the training data
 
 ### Future Improvements
 
-- Enhanced text preprocessing (stopword removal, stemming)
+- Better text preprocessing
 - Hyperparameter tuning
-- Additional training data
-- Class imbalance handling
-- Alternative algorithms (SVM, Random Forest)
-- Deep learning approaches
+- More training data
+- Handling class imbalance
+- Trying new algorithms (SVM, Random Forest, etc.)
+- Possible deep learning upgrade
 
 ## Troubleshooting
 
 ### API Server Issues
 
-**Problem**: API server won't start
-- **Solution**: Ensure port 8000 is not in use: `lsof -i :8000` (Linux/Mac) or `netstat -ano | findstr :8000` (Windows)
-- **Solution**: Check that all dependencies are installed: `pip install -r requirements.txt`
+**API won’t start**
+- Make sure port 8000 is free  
+- Reinstall dependencies: `pip install -r requirements.txt`
 
-**Problem**: Model not loaded error
-- **Solution**: Run `python train.py` to generate model files
-- **Solution**: Verify `model/vectorizer.pkl` and `model/model.pkl` exist
+**Model not loading**
+- Run `python train.py`  
+- Check that `model/vectorizer.pkl` and `model/model.pkl` exist
 
 ### Frontend Issues
 
-**Problem**: Web interface shows "Error connecting to API"
-- **Solution**: Ensure the API server is running on `http://localhost:8000`
-- **Solution**: Check browser console (F12) for detailed error messages
-- **Solution**: Verify CORS is enabled in the API (should be configured by default)
+**“Error connecting to API”**
+- Confirm the API is running  
+- Check browser console (F12)  
+- Ensure CORS is enabled
 
-**Problem**: Results not displaying
-- **Solution**: Check browser console for JavaScript errors
-- **Solution**: Verify the API is returning valid JSON responses
-- **Solution**: Clear browser cache and refresh
+**Results not showing**
+- Look for JS errors in console  
+- Make sure API returns valid JSON  
+- Refresh or clear cache
 
 ### Extension Issues
 
-**Problem**: Extension not analyzing headlines
-- **Solution**: Ensure API server is running on `localhost:8000`
-- **Solution**: Check extension permissions in `chrome://extensions/`
-- **Solution**: Reload the extension after making changes
-- **Solution**: Check browser console for content script errors
+**Headlines not analyzing**
+- API must be running on `localhost:8000`  
+- Check extension permissions  
+- Reload the extension  
+- Check console for errors
 
-**Problem**: Extension shows errors in console
-- **Solution**: Verify `http://localhost:8000` is accessible
-- **Solution**: Check that the API `/predict` endpoint is working
-- **Solution**: Ensure manifest.json has correct permissions
+**Console errors**
+- Ensure the API is reachable  
+- Verify `/predict` works  
+- Check `manifest.json` permissions
 
 ### Model Training Issues
 
-**Problem**: Training script fails
-- **Solution**: Verify `data/training_data.csv` exists and is readable
-- **Solution**: Check CSV format (should have 'text' and 'sentiment' columns)
-- **Solution**: Ensure sufficient disk space for model files
+**Training script fails**
+- Check `data/training_data.csv`  
+- Ensure columns `text` and `sentiment` exist  
+- Make sure there’s enough disk space
 
-**Problem**: Low model accuracy
-- **Solution**: Collect more training data
-- **Solution**: Improve text preprocessing
-- **Solution**: Try different hyperparameters
-- **Solution**: Address class imbalance in dataset
+**Low accuracy**
+- Add more data  
+- Improve preprocessing  
+- Adjust hyperparameters  
+- Handle class imbalance
 
 ## License
 
-This is a student project for educational purposes. Please use responsibly and in accordance with your institution's academic integrity policies.
+Educational project. Use responsibly.
 
 ## Acknowledgments
 
-This project was developed as part of a student assignment focusing on end-to-end machine learning system development. The system demonstrates integration of machine learning models with web technologies and browser extensions.
+Created as part of a student assignment on end-to-end ML system design.
 
 ## References
 
-- scikit-learn Documentation: https://scikit-learn.org/
-- FastAPI Documentation: https://fastapi.tiangolo.com/
-- Chrome Extension Documentation: https://developer
+- scikit-learn: https://scikit-learn.org/  
+- FastAPI: https://fastapi.tiangolo.com/  
+- Chrome Extensions: https://developer.chrome.com/docs/extensions/
+
