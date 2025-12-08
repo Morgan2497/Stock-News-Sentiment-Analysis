@@ -159,3 +159,19 @@ button:disabled {
     border: 2px solid #c62828;
 }
 
+.explanation {
+    margin-top: 20px;
+    padding: 15px;
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 8px;
+    font-size: 14px;
+    text-align: left;
+    line-height: 1.6;
+}
+
+.explanation strong {
+    font-size: 16px;
+    display: block;
+    margin-bottom: 8px;
+}
+

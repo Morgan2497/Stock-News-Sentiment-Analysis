@@ -94,6 +94,13 @@
                         html += '</div>';
                     }
                     
+                    if (data.explanation) {
+                        html += '<div class="explanation">';
+                        html += '<strong>Why:</strong><br>';
+                        html += `<div style="margin-top: 10px; line-height: 1.6;">${data.explanation}</div>`;
+                        html += '</div>';
+                    }
+                    
                     resultDiv.innerHTML = html;
                     console.log('✅ Result displayed!', resultDiv.className, resultDiv.style.display);
                 }
