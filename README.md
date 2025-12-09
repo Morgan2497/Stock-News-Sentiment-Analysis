@@ -247,18 +247,11 @@ This will run sample predictions and display the results.
 
 ## Testing the Application
 
-Follow these commands sequentially to test the application:
-
 ### Step 1: Navigate to Project Directory
 
 ```bash
 cd /home/morgankim/coding_place/Stock-News-Sentiment-Analysis
 ```
-
-**What it does:** Changes to the project root directory.  
-**Why:** Ensures commands run from the correct location so relative paths work.
-
----
 
 ### Step 2: Activate Virtual Environment (if using one)
 
@@ -266,42 +259,44 @@ cd /home/morgankim/coding_place/Stock-News-Sentiment-Analysis
 source venv/bin/activate
 ```
 
-**What it does:** Activates the Python virtual environment.  
-**Why:** Uses the project's installed packages and avoids conflicts with system Python.
+### Step 3: Install Dependencies (if not already installed)
 
----
+```bash
+pip install -r requirements.txt
+```
 
-### Step 3: Verify Model Files Exist
+### Step 4: Train the Model
+
+```bash
+python train.py
+```
+
+**What this does:** Trains the sentiment analysis model using your training data
+
+**Expected output:** You'll see training progress, evaluation metrics, and confirmation that model files were saved
+
+**Time:** This may take a few minutes depending on dataset size
+
+**Result:** Creates `model/model.pkl` and `model/vectorizer.pkl`
+
+### Step 5: Verify Model Files Were Created
 
 ```bash
 ls -la model/
 ```
 
-**What it does:** Lists files in the `model/` directory.  
-**Why:** Confirms `model.pkl` and `vectorizer.pkl` exist before starting the API.  
-**Expected output:** You should see `model.pkl` and `vectorizer.pkl` files.
+**Expected output:** You should see `model.pkl`, `vectorizer.pkl`, and `metrics.json`
 
-**If files are missing, train the model first:**
-```bash
-python train.py
-```
-
----
-
-### Step 4: Start the API Server
+### Step 6: Start the API Server
 
 ```bash
 uvicorn api.main:app --reload
 ```
 
-**What it does:**
-- Starts the FastAPI server on `http://localhost:8000`
-- Loads the ML model and vectorizer
-- Initializes Groq client (if API key is configured)
-- Loads stock tickers for detection
-- `--reload` enables auto-restart on code changes
+**What this does:** Starts the FastAPI backend server
 
-**Why:** The backend must be running for the frontend and extension to work.  
+**Keep this terminal open** - the server needs to keep running
+
 **Expected output:**
 ```
 INFO:     Uvicorn running on http://127.0.0.1:8000
@@ -311,80 +306,18 @@ INFO:     Uvicorn running on http://127.0.0.1:8000
 INFO:     Application startup complete.
 ```
 
-**Keep this terminal open** - the server needs to keep running.
+### Step 7: Open the Web Interface (in a new terminal)
 
----
-
-### Step 5: Open Web Interface
-
-**Option A: Direct file open**
+**Option A: Using command line**
 ```bash
 cd /home/morgankim/coding_place/Stock-News-Sentiment-Analysis/frontend
 xdg-open index.html
 ```
 
-**Option B: Using file path**
-- Navigate to `frontend/index.html` in your file manager
-- Double-click to open in your default browser
-
-**What it does:** Opens the web interface in your browser.  
-**Why:** Provides the user interface for testing the application.
-
----
-
-### Step 6: Test API Directly (Optional)
-
-In a new terminal:
-
-```bash
-curl -X POST "http://localhost:8000/predict" \
-     -H "Content-Type: application/json" \
-     -d '{"text": "Stock market today: Dow, S&P 500, Nasdaq rally into Thanksgiving, notch best 4-day stretch since May"}'
-```
-
-**What it does:** Sends a POST request directly to the API.  
-**Why:** Tests the API without the frontend.  
-**Expected output:** JSON response with sentiment, confidence, probabilities, etc.
-
----
-
-### Step 7: View Performance Metrics (Optional)
-
-In the web interface:
-1. Scroll to the "Model Performance Metrics" section
-2. Click "Load Metrics"
-3. View:
-   - Overall metrics (Accuracy, Precision, Recall, F1-Score)
-   - Per-class metrics (Buy/Hold/Sell)
-   - Confusion matrix
-   - Dataset information
-
----
-
-## Quick Test Sequence Summary
-
-For a quick test, run these 3 commands in order:
-
-1. **Start API:**
-   ```bash
-   cd /home/morgankim/coding_place/Stock-News-Sentiment-Analysis
-   uvicorn api.main:app --reload
-   ```
-
-2. **Open Frontend:**
-   - Navigate to `frontend/index.html` and open in browser
-
-3. **Test Prediction:**
-   - Enter text and click "Analyze Sentiment"
-
----
-
-## Stopping the Application
-
-To stop the API server:
-- Press `Ctrl+C` in the terminal where the server is running
-
----
+**Option B: Manual navigation**
+- Open your file manager
+- Navigate to `/home/morgankim/coding_place/Stock-News-Sentiment-Analysis/frontend/`
+- Double-click `index.html` to open in your browser
 
 ## API Documentation
 
