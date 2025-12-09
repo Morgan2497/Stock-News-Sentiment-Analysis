@@ -1,0 +1,64 @@
+{
+  "overall": {
+    "accuracy": 0.6086095992083127,
+    "precision": 0.628948820616178,
+    "recall": 0.6086095992083127,
+    "f1_score": 0.5948537063013899
+  },
+  "per_class": {
+    "Buy": {
+      "precision": 0.5763604447045055,
+      "recall": 0.6593038821954484,
+      "f1_score": 0.6150483921323759
+    },
+    "Hold": {
+      "precision": 0.607647983237297,
+      "recall": 0.7407407407407407,
+      "f1_score": 0.6676258992805756
+    },
+    "Sell": {
+      "precision": 0.7429245283018868,
+      "recall": 0.32077393075356414,
+      "f1_score": 0.4480796586059744
+    }
+  },
+  "confusion_matrix": {
+    "labels": [
+      "Buy",
+      "Hold",
+      "Sell"
+    ],
+    "matrix": [
+      [
+        985,
+        442,
+        67
+      ],
+      [
+        364,
+        1160,
+        42
+      ],
+      [
+        360,
+        307,
+        315
+      ]
+    ]
+  },
+  "dataset_info": {
+    "total_samples": 20207,
+    "train_samples": 16165,
+    "test_samples": 4042,
+    "classes": [
+      "Buy",
+      "Hold",
+      "Sell"
+    ],
+    "class_distribution": {
+      "Buy": 5975,
+      "Hold": 6264,
+      "Sell": 3926
+    }
+  }
+}

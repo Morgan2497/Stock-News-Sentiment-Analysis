@@ -55,6 +55,16 @@
             <div id="batchResults" style="display: none;"></div>
         </div>
         
+        <!-- Metrics Section -->
+        <div class="metrics-section" style="margin-top: 40px; padding: 25px; background: #f8f9fa; border-radius: 12px; border: 2px solid #e0e0e0;">
+            <h3 style="margin-top: 0; color: #333;">Model Performance Metrics</h3>
+            <p style="color: #666; margin-bottom: 15px;">View the model's performance statistics</p>
+            <button id="loadMetricsBtn" onclick="loadMetrics()" style="padding: 12px 20px; background: #2196f3; color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; transition: transform 0.2s;">
+                Load Metrics
+            </button>
+            <div id="metricsDisplay" style="display: none; margin-top: 20px;"></div>
+        </div>
+        
         <div class="info">
             <h3>How it works:</h3>
             <ul>
@@ -379,6 +389,135 @@
             a.click();
             document.body.removeChild(a);
             window.URL.revokeObjectURL(url);
+        }
+
+        // Metrics Functions
+        async function loadMetrics() {
+            const metricsDiv = document.getElementById('metricsDisplay');
+            const loadBtn = document.getElementById('loadMetricsBtn');
+            
+            loadBtn.disabled = true;
+            loadBtn.textContent = 'Loading...';
+            metricsDiv.style.display = 'none';
+            
+            try {
+                const response = await fetch('http://localhost:8000/metrics');
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                
+                const data = await response.json();
+                
+                if (data.error) {
+                    metricsDiv.innerHTML = `
+                        <div style="color: red; padding: 15px; background: #ffebee; border-radius: 8px;">
+                            ${data.error}
+                        </div>
+                    `;
+                } else {
+                    let html = '<div style="background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">';
+                    
+                    // Overall Metrics
+                    html += '<h4 style="color: #333; margin-top: 0;">Overall Performance</h4>';
+                    html += '<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-bottom: 25px;">';
+                    html += `<div style="padding: 15px; background: #e3f2fd; border-radius: 8px;">
+                        <div style="font-size: 12px; color: #666; margin-bottom: 5px;">Accuracy</div>
+                        <div style="font-size: 24px; font-weight: bold; color: #1976d2;">${(data.overall.accuracy * 100).toFixed(2)}%</div>
+                    </div>`;
+                    html += `<div style="padding: 15px; background: #f3e5f5; border-radius: 8px;">
+                        <div style="font-size: 12px; color: #666; margin-bottom: 5px;">Precision</div>
+                        <div style="font-size: 24px; font-weight: bold; color: #7b1fa2;">${(data.overall.precision * 100).toFixed(2)}%</div>
+                    </div>`;
+                    html += `<div style="padding: 15px; background: #e8f5e9; border-radius: 8px;">
+                        <div style="font-size: 12px; color: #666; margin-bottom: 5px;">Recall</div>
+                        <div style="font-size: 24px; font-weight: bold; color: #388e3c;">${(data.overall.recall * 100).toFixed(2)}%</div>
+                    </div>`;
+                    html += `<div style="padding: 15px; background: #fff3e0; border-radius: 8px;">
+                        <div style="font-size: 12px; color: #666; margin-bottom: 5px;">F1-Score</div>
+                        <div style="font-size: 24px; font-weight: bold; color: #f57c00;">${(data.overall.f1_score * 100).toFixed(2)}%</div>
+                    </div>`;
+                    html += '</div>';
+                    
+                    // Per-Class Metrics
+                    html += '<h4 style="color: #333; margin-top: 20px;">Per-Class Performance</h4>';
+                    html += '<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 15px; margin-bottom: 25px;">';
+                    
+                    for (const [className, metrics] of Object.entries(data.per_class)) {
+                        const bgColor = className === 'Buy' ? '#e8f5e9' : 
+                                       className === 'Sell' ? '#ffebee' : '#fff3e0';
+                        const textColor = className === 'Buy' ? '#2e7d32' : 
+                                        className === 'Sell' ? '#c62828' : '#e65100';
+                        
+                        html += `<div style="padding: 15px; background: ${bgColor}; border-radius: 8px; border-left: 4px solid ${textColor};">
+                            <div style="font-weight: bold; font-size: 18px; color: ${textColor}; margin-bottom: 10px;">${className}</div>
+                            <div style="font-size: 14px; margin-bottom: 5px;">
+                                <span style="color: #666;">Precision:</span> 
+                                <strong>${(metrics.precision * 100).toFixed(2)}%</strong>
+                            </div>
+                            <div style="font-size: 14px; margin-bottom: 5px;">
+                                <span style="color: #666;">Recall:</span> 
+                                <strong>${(metrics.recall * 100).toFixed(2)}%</strong>
+                            </div>
+                            <div style="font-size: 14px;">
+                                <span style="color: #666;">F1-Score:</span> 
+                                <strong>${(metrics.f1_score * 100).toFixed(2)}%</strong>
+                            </div>
+                        </div>`;
+                    }
+                    html += '</div>';
+                    
+                    // Confusion Matrix
+                    if (data.confusion_matrix) {
+                        html += '<h4 style="color: #333; margin-top: 20px;">Confusion Matrix</h4>';
+                        html += '<div style="overflow-x: auto;">';
+                        html += '<table style="width: 100%; border-collapse: collapse; background: white; border-radius: 8px; overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">';
+                        html += '<thead><tr style="background: #f5f5f5;">';
+                        html += '<th style="padding: 12px; text-align: left; border: 1px solid #ddd; font-weight: bold;">Actual \\ Predicted</th>';
+                        data.confusion_matrix.labels.forEach(label => {
+                            html += `<th style="padding: 12px; text-align: center; border: 1px solid #ddd; font-weight: bold;">${label}</th>`;
+                        });
+                        html += '</tr></thead><tbody>';
+                        
+                        data.confusion_matrix.matrix.forEach((row, i) => {
+                            html += `<tr><td style="padding: 12px; font-weight: bold; border: 1px solid #ddd; background: #f9f9f9;">${data.confusion_matrix.labels[i]}</td>`;
+                            row.forEach(cell => {
+                                html += `<td style="padding: 12px; text-align: center; border: 1px solid #ddd;">${cell}</td>`;
+                            });
+                            html += '</tr>';
+                        });
+                        html += '</tbody></table></div>';
+                    }
+                    
+                    // Dataset Info
+                    if (data.dataset_info) {
+                        html += '<h4 style="color: #333; margin-top: 25px;">Dataset Information</h4>';
+                        html += '<div style="background: white; padding: 15px; border-radius: 8px; border: 1px solid #e0e0e0;">';
+                        html += `<div style="margin-bottom: 8px;"><strong>Total Samples:</strong> ${data.dataset_info.total_samples.toLocaleString()}</div>`;
+                        html += `<div style="margin-bottom: 8px;"><strong>Training Samples:</strong> ${data.dataset_info.train_samples.toLocaleString()}</div>`;
+                        html += `<div style="margin-bottom: 8px;"><strong>Test Samples:</strong> ${data.dataset_info.test_samples.toLocaleString()}</div>`;
+                        html += `<div><strong>Classes:</strong> ${data.dataset_info.classes.join(', ')}</div>`;
+                        html += '</div>';
+                    }
+                    
+                    html += '</div>';
+                    metricsDiv.innerHTML = html;
+                }
+                
+                metricsDiv.style.display = 'block';
+                
+            } catch (error) {
+                metricsDiv.innerHTML = `
+                    <div style="color: red; padding: 15px; background: #ffebee; border-radius: 8px;">
+                        Error loading metrics: ${error.message}<br>
+                        Make sure the API server is running and you've trained the model.
+                    </div>
+                `;
+                metricsDiv.style.display = 'block';
+            } finally {
+                loadBtn.disabled = false;
+                loadBtn.textContent = 'Load Metrics';
+            }
         }
     </script>
 </body>
