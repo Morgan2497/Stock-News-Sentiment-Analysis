@@ -1,0 +1,525 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Stock News Sentiment Analyzer</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <h1>Stock News Sentiment Analyzer</h1>
+        <p class="subtitle">Analyze stock market news headlines and articles</p>
+        
+        <div class="input-section">
+            <textarea 
+                id="textInput" 
+                placeholder="Enter stock news headline or article here..."
+                rows="6"
+            ></textarea>
+            <button id="analyzeBtn" onclick="analyze()">Analyze Sentiment</button>
+        </div>
+        
+        <div id="result" class="result"></div>
+        
+        <!-- Batch Analysis Section -->
+        <div class="batch-section">
+            <h3>Batch Analysis</h3>
+            <p style="color: #666; margin-bottom: 15px;">Analyze multiple headlines at once</p>
+            
+            <div style="margin-bottom: 15px;">
+                <label for="batchInput" style="display: block; margin-bottom: 8px; font-weight: bold; color: #333;">
+                    Enter multiple headlines (one per line) or upload CSV:
+                </label>
+                <textarea 
+                    id="batchInput" 
+                    placeholder="Enter headlines, one per line...&#10;&#10;Example:&#10;Stock prices surge as company reports profits&#10;Market crashes on bad news&#10;Company maintains stable outlook"
+                    rows="8"
+                    style="width: 100%; padding: 15px; border: 2px solid #e0e0e0; border-radius: 10px; font-size: 16px; font-family: inherit; resize: vertical;"
+                ></textarea>
+            </div>
+            
+            <div style="display: flex; gap: 10px; margin-bottom: 15px; flex-wrap: wrap;">
+                <input type="file" id="csvFile" accept=".csv" style="display: none;" onchange="handleCSVUpload(event)">
+                <button onclick="document.getElementById('csvFile').click()" style="padding: 12px 20px; background: #667eea; color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; transition: transform 0.2s;">
+                    Upload CSV
+                </button>
+                <button id="batchAnalyzeBtn" onclick="analyzeBatch()" style="padding: 12px 20px; background: #4caf50; color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; transition: transform 0.2s;">
+                    Analyze All
+                </button>
+                <button id="exportBtn" onclick="exportResults()" style="padding: 12px 20px; background: #ff9800; color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; transition: transform 0.2s; display: none;">
+                    Export Results
+                </button>
+            </div>
+            
+            <div id="batchResults" style="display: none;"></div>
+        </div>
+        
+        <!-- Metrics Section -->
+        <div class="metrics-section" style="margin-top: 40px; padding: 25px; background: #f8f9fa; border-radius: 12px; border: 2px solid #e0e0e0;">
+            <h3 style="margin-top: 0; color: #333;">Model Performance Metrics</h3>
+            <p style="color: #666; margin-bottom: 15px;">View the model's performance statistics</p>
+            <button id="loadMetricsBtn" onclick="loadMetrics()" style="padding: 12px 20px; background: #2196f3; color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; transition: transform 0.2s;">
+                Load Metrics
+            </button>
+            <div id="metricsDisplay" style="display: none; margin-top: 20px;"></div>
+        </div>
+        
+        <div class="info">
+            <h3>How it works:</h3>
+            <ul>
+                <li>Enter a stock market news headline or article</li>
+                <li>Click "Analyze Sentiment" to get Buy/Hold/Sell prediction</li>
+                <li>The model uses Naive Bayes with TF-IDF vectorization</li>
+            </ul>
+        </div>
+    </div>
+    
+    <script>
+        const API_URL = 'http://localhost:8000/predict';
+
+        async function analyze() {
+            console.log('Analyze function called!'); // Debug line
+            
+            const text = document.getElementById('textInput').value.trim();
+            const resultDiv = document.getElementById('result');
+            const button = document.getElementById('analyzeBtn');
+            
+            console.log('Text input:', text); // Debug line
+            
+            if (!text) {
+                alert('Please enter some text to analyze!');
+                return;
+            }
+            
+            // Disable button and show loading
+            button.disabled = true;
+            button.textContent = 'Analyzing...';
+            resultDiv.style.display = 'none';
+            
+            try {
+                console.log('Sending request to:', API_URL); // Debug line
+                
+                const response = await fetch(API_URL, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ text: text })
+                });
+                
+                console.log('Response status:', response.status); // Debug line
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                
+                const data = await response.json();
+                console.log('Response data:', data); // Debug line
+                
+                if (data.error) {
+                    resultDiv.className = 'result error show';
+                    resultDiv.style.display = 'block';
+                    resultDiv.innerHTML = `<div>${data.error}</div>`;
+                } else {
+                    resultDiv.className = `result ${data.sentiment.toLowerCase()} show`;
+                    resultDiv.style.display = 'block'; // Explicitly show the result
+                    
+                    let html = `<div>Sentiment: ${data.sentiment}</div>`;
+                    html += `<div class="confidence">Confidence: ${(data.confidence * 100).toFixed(2)}%</div>`;
+                    
+                    if (data.probabilities) {
+                        html += '<div class="probabilities">';
+                        html += '<strong>Probabilities:</strong><br>';
+                        for (const [label, prob] of Object.entries(data.probabilities)) {
+                            html += `<div>${label}: ${(prob * 100).toFixed(2)}%</div>`;
+                        }
+                        html += '</div>';
+                    }
+                    
+                    if (data.stocks && data.stocks.length > 0) {
+                        html += '<div class="stocks-detected">';
+                        html += '<strong>Stocks Detected:</strong><br>';
+                        data.stocks.forEach(stock => {
+                            html += `<div style="margin-top: 8px; padding: 8px; background: rgba(255,255,255,0.2); border-radius: 5px;">
+                                <strong>${stock.symbol}</strong> - ${stock.name}<br>
+                                <small style="opacity: 0.9;">${stock.exchange} • ${stock.sector}</small>
+                            </div>`;
+                        });
+                        html += '</div>';
+                    }
+                    
+                    if (data.buy_recommendation && data.buy_recommendation.recommended) {
+                        html += '<div class="buy-recommendation">';
+                        html += '<strong>💡 Buy Recommendation:</strong><br>';
+                        html += `<div style="margin-top: 10px; padding: 15px; background: rgba(255,255,255,0.3); border-radius: 8px; border: 2px solid rgba(255,255,255,0.5);">`;
+                        html += `<div style="font-size: 18px; margin-bottom: 8px;"><strong>Consider buying:</strong> `;
+                        data.buy_recommendation.stocks.forEach((stock, idx) => {
+                            html += `<strong style="font-size: 20px;">${stock.symbol}</strong>`;
+                            if (idx < data.buy_recommendation.stocks.length - 1) html += ', ';
+                        });
+                        html += `</div>`;
+                        html += `<small style="opacity: 0.9;">${data.buy_recommendation.reason}</small>`;
+                        html += '</div></div>';
+                    }
+                    
+                    if (data.explanation) {
+                        html += '<div class="explanation">';
+                        html += '<strong>Why:</strong><br>';
+                        html += `<div style="margin-top: 10px; line-height: 1.6;">${data.explanation}</div>`;
+                        html += '</div>';
+                    }
+                    
+                    resultDiv.innerHTML = html;
+                    console.log('Result displayed!', resultDiv.className, resultDiv.style.display);
+                }
+                
+            } catch (error) {
+                console.error('Full error:', error); // Debug line
+                resultDiv.className = 'result error show';
+                resultDiv.style.display = 'block'; // Explicitly show the error
+                resultDiv.innerHTML = `
+                    <div>Error connecting to API</div>
+                    <div style="font-size: 14px; margin-top: 10px;">
+                        Error: ${error.message}<br><br>
+                        Make sure the FastAPI server is running:<br>
+                        <code>uvicorn api.main:app --reload</code>
+                    </div>
+                `;
+            } finally {
+                button.disabled = false;
+                button.textContent = 'Analyze Sentiment';
+            }
+        }
+
+        // Debug: Check if function is defined
+        console.log('Script loaded! analyze function type:', typeof analyze);
+        
+        // Wait for page to load, then attach event listener as backup
+        window.addEventListener('DOMContentLoaded', function() {
+            console.log('DOM loaded');
+            const btn = document.getElementById('analyzeBtn');
+            if (btn) {
+                console.log('Button found, ensuring click handler is attached');
+                // Remove any existing listeners and add fresh one
+                btn.onclick = analyze;
+            } else {
+                console.error('Button not found!');
+            }
+        });
+        
+        // Batch Analysis Functions
+        let batchResultsData = [];
+
+        function handleCSVUpload(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const text = e.target.result;
+                const lines = text.split('\n').filter(line => line.trim());
+                
+                // Assume first line is header, get text from first column or all columns
+                const headlines = lines.slice(1).map(line => {
+                    const parts = line.split(',');
+                    return parts[0] || line; // Get first column or whole line
+                }).filter(h => h.trim());
+                
+                document.getElementById('batchInput').value = headlines.join('\n');
+            };
+            reader.readAsText(file);
+        }
+
+        async function analyzeBatch() {
+            const batchInput = document.getElementById('batchInput').value.trim();
+            const batchResultsDiv = document.getElementById('batchResults');
+            const batchBtn = document.getElementById('batchAnalyzeBtn');
+            const exportBtn = document.getElementById('exportBtn');
+            
+            if (!batchInput) {
+                alert('Please enter headlines or upload a CSV file!');
+                return;
+            }
+            
+            // Split by newlines and filter empty lines
+            const texts = batchInput.split('\n')
+                .map(line => line.trim())
+                .filter(line => line.length > 0);
+            
+            if (texts.length === 0) {
+                alert('No valid headlines found!');
+                return;
+            }
+            
+            if (texts.length > 50) {
+                if (!confirm(`You have ${texts.length} headlines. This may take a while. Continue?`)) {
+                    return;
+                }
+            }
+            
+            batchBtn.disabled = true;
+            batchBtn.textContent = `Analyzing ${texts.length} headlines...`;
+            batchResultsDiv.style.display = 'none';
+            
+            try {
+                const response = await fetch('http://localhost:8000/predict/batch', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ texts: texts })
+                });
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                
+                const data = await response.json();
+                
+                if (data.error) {
+                    batchResultsDiv.innerHTML = `<div style="color: red; padding: 15px; background: #ffebee; border-radius: 8px;">${data.error}</div>`;
+                } else {
+                    batchResultsData = data.results;
+                    displayBatchResults(data);
+                    exportBtn.style.display = 'inline-block';
+                }
+                
+            } catch (error) {
+                batchResultsDiv.innerHTML = `
+                    <div style="color: red; padding: 15px; background: #ffebee; border-radius: 8px;">
+                        Error: ${error.message}<br>
+                        Make sure the API server is running.
+                    </div>
+                `;
+            } finally {
+                batchBtn.disabled = false;
+                batchBtn.textContent = '🔍 Analyze All';
+            }
+        }
+
+        function displayBatchResults(data) {
+            const batchResultsDiv = document.getElementById('batchResults');
+            let html = `<h4 style="margin-bottom: 15px; color: #333;">Results (${data.count} analyzed)</h4>`;
+            html += '<div style="max-height: 500px; overflow-y: auto;">';
+            
+            data.results.forEach((result, index) => {
+                const colorClass = result.sentiment.toLowerCase();
+                const borderColor = colorClass === 'buy' ? '#4caf50' : 
+                                   colorClass === 'sell' ? '#f44336' : '#ff9800';
+                const bgColor = colorClass === 'buy' ? 'rgba(76, 175, 80, 0.1)' : 
+                               colorClass === 'sell' ? 'rgba(244, 67, 54, 0.1)' : 
+                               'rgba(255, 152, 0, 0.1)';
+                
+                html += `
+                    <div style="margin-bottom: 15px; padding: 15px; background: ${bgColor}; border-radius: 8px; border-left: 4px solid ${borderColor};">
+                        <div style="font-weight: bold; margin-bottom: 8px; color: #333;">
+                            ${index + 1}. ${result.text.substring(0, 120)}${result.text.length > 120 ? '...' : ''}
+                        </div>
+                        <div style="margin-top: 10px; display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
+                            <span style="background: ${borderColor}; color: white; padding: 6px 12px; border-radius: 4px; font-weight: bold; font-size: 14px;">
+                                ${result.sentiment}
+                            </span>
+                            <span style="color: #666; font-size: 14px;">Confidence: ${(result.confidence * 100).toFixed(1)}%</span>
+                        </div>
+                `;
+                
+                // Add stock information if detected
+                if (result.stocks && result.stocks.length > 0) {
+                    html += `<div style="margin-top: 10px; padding: 10px; background: rgba(255,255,255,0.5); border-radius: 5px;">
+                        <strong>Stocks:</strong> `;
+                    result.stocks.forEach((stock, idx) => {
+                        html += `<strong>${stock.symbol}</strong>`;
+                        if (idx < result.stocks.length - 1) html += ', ';
+                    });
+                    html += `</div>`;
+                }
+                
+                // Add buy recommendation if available
+                if (result.buy_recommendation && result.buy_recommendation.recommended) {
+                    html += `<div style="margin-top: 10px; padding: 10px; background: rgba(76, 175, 80, 0.2); border-radius: 5px; border: 1px solid #4caf50;">
+                        <strong>💡 Buy:</strong> `;
+                    result.buy_recommendation.stocks.forEach((stock, idx) => {
+                        html += `<strong>${stock.symbol}</strong>`;
+                        if (idx < result.buy_recommendation.stocks.length - 1) html += ', ';
+                    });
+                    html += `</div>`;
+                }
+                
+                html += `</div>`;
+            });
+            
+            html += '</div>';
+            batchResultsDiv.innerHTML = html;
+            batchResultsDiv.style.display = 'block';
+        }
+
+        function exportResults() {
+            if (batchResultsData.length === 0) {
+                alert('No results to export!');
+                return;
+            }
+            
+            // Create CSV content
+            let csv = 'Text,Sentiment,Confidence,Buy_Prob,Hold_Prob,Sell_Prob,Stocks,Buy_Recommendation,Explanation\n';
+            
+            batchResultsData.forEach(result => {
+                const text = `"${result.text.replace(/"/g, '""')}"`;
+                const sentiment = result.sentiment;
+                const confidence = (result.confidence * 100).toFixed(2);
+                const buyProb = (result.probabilities.Buy * 100).toFixed(2);
+                const holdProb = (result.probabilities.Hold * 100).toFixed(2);
+                const sellProb = (result.probabilities.Sell * 100).toFixed(2);
+                const stocks = result.stocks ? result.stocks.map(s => s.symbol).join(';') : '';
+                const buyRec = result.buy_recommendation && result.buy_recommendation.recommended 
+                    ? result.buy_recommendation.stocks.map(s => s.symbol).join(';') 
+                    : '';
+                const explanation = result.explanation ? `"${result.explanation.replace(/"/g, '""')}"` : '';
+                
+                csv += `${text},${sentiment},${confidence},${buyProb},${holdProb},${sellProb},"${stocks}","${buyRec}",${explanation}\n`;
+            });
+            
+            // Download CSV
+            const blob = new Blob([csv], { type: 'text/csv' });
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `sentiment_analysis_${new Date().toISOString().split('T')[0]}.csv`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            window.URL.revokeObjectURL(url);
+        }
+
+        // Metrics Functions
+        async function loadMetrics() {
+            const metricsDiv = document.getElementById('metricsDisplay');
+            const loadBtn = document.getElementById('loadMetricsBtn');
+            
+            loadBtn.disabled = true;
+            loadBtn.textContent = 'Loading...';
+            metricsDiv.style.display = 'none';
+            
+            try {
+                const response = await fetch('http://localhost:8000/metrics');
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                
+                const data = await response.json();
+                
+                if (data.error) {
+                    metricsDiv.innerHTML = `
+                        <div style="color: red; padding: 15px; background: #ffebee; border-radius: 8px;">
+                            ${data.error}
+                        </div>
+                    `;
+                } else {
+                    let html = '<div style="background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">';
+                    
+                    // Overall Metrics
+                    html += '<h4 style="color: #333; margin-top: 0;">Overall Performance</h4>';
+                    html += '<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-bottom: 25px;">';
+                    html += `<div style="padding: 15px; background: #e3f2fd; border-radius: 8px;">
+                        <div style="font-size: 12px; color: #666; margin-bottom: 5px;">Accuracy</div>
+                        <div style="font-size: 24px; font-weight: bold; color: #1976d2;">${(data.overall.accuracy * 100).toFixed(2)}%</div>
+                    </div>`;
+                    html += `<div style="padding: 15px; background: #f3e5f5; border-radius: 8px;">
+                        <div style="font-size: 12px; color: #666; margin-bottom: 5px;">Precision</div>
+                        <div style="font-size: 24px; font-weight: bold; color: #7b1fa2;">${(data.overall.precision * 100).toFixed(2)}%</div>
+                    </div>`;
+                    html += `<div style="padding: 15px; background: #e8f5e9; border-radius: 8px;">
+                        <div style="font-size: 12px; color: #666; margin-bottom: 5px;">Recall</div>
+                        <div style="font-size: 24px; font-weight: bold; color: #388e3c;">${(data.overall.recall * 100).toFixed(2)}%</div>
+                    </div>`;
+                    html += `<div style="padding: 15px; background: #fff3e0; border-radius: 8px;">
+                        <div style="font-size: 12px; color: #666; margin-bottom: 5px;">F1-Score</div>
+                        <div style="font-size: 24px; font-weight: bold; color: #f57c00;">${(data.overall.f1_score * 100).toFixed(2)}%</div>
+                    </div>`;
+                    html += '</div>';
+                    
+                    // Per-Class Metrics
+                    html += '<h4 style="color: #333; margin-top: 20px;">Per-Class Performance</h4>';
+                    html += '<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 15px; margin-bottom: 25px;">';
+                    
+                    for (const [className, metrics] of Object.entries(data.per_class)) {
+                        const bgColor = className === 'Buy' ? '#e8f5e9' : 
+                                       className === 'Sell' ? '#ffebee' : '#fff3e0';
+                        const textColor = className === 'Buy' ? '#2e7d32' : 
+                                        className === 'Sell' ? '#c62828' : '#e65100';
+                        
+                        html += `<div style="padding: 15px; background: ${bgColor}; border-radius: 8px; border-left: 4px solid ${textColor};">
+                            <div style="font-weight: bold; font-size: 18px; color: ${textColor}; margin-bottom: 10px;">${className}</div>
+                            <div style="font-size: 14px; margin-bottom: 5px;">
+                                <span style="color: #666;">Precision:</span> 
+                                <strong>${(metrics.precision * 100).toFixed(2)}%</strong>
+                            </div>
+                            <div style="font-size: 14px; margin-bottom: 5px;">
+                                <span style="color: #666;">Recall:</span> 
+                                <strong>${(metrics.recall * 100).toFixed(2)}%</strong>
+                            </div>
+                            <div style="font-size: 14px;">
+                                <span style="color: #666;">F1-Score:</span> 
+                                <strong>${(metrics.f1_score * 100).toFixed(2)}%</strong>
+                            </div>
+                        </div>`;
+                    }
+                    html += '</div>';
+                    
+                    // Confusion Matrix
+                    if (data.confusion_matrix) {
+                        html += '<h4 style="color: #333; margin-top: 20px;">Confusion Matrix</h4>';
+                        html += '<div style="overflow-x: auto;">';
+                        html += '<table style="width: 100%; border-collapse: collapse; background: white; border-radius: 8px; overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">';
+                        html += '<thead><tr style="background: #f5f5f5;">';
+                        html += '<th style="padding: 12px; text-align: left; border: 1px solid #ddd; font-weight: bold;">Actual \\ Predicted</th>';
+                        data.confusion_matrix.labels.forEach(label => {
+                            html += `<th style="padding: 12px; text-align: center; border: 1px solid #ddd; font-weight: bold;">${label}</th>`;
+                        });
+                        html += '</tr></thead><tbody>';
+                        
+                        data.confusion_matrix.matrix.forEach((row, i) => {
+                            html += `<tr><td style="padding: 12px; font-weight: bold; border: 1px solid #ddd; background: #f9f9f9;">${data.confusion_matrix.labels[i]}</td>`;
+                            row.forEach(cell => {
+                                html += `<td style="padding: 12px; text-align: center; border: 1px solid #ddd;">${cell}</td>`;
+                            });
+                            html += '</tr>';
+                        });
+                        html += '</tbody></table></div>';
+                    }
+                    
+                    // Dataset Info
+                    if (data.dataset_info) {
+                        html += '<h4 style="color: #333; margin-top: 25px;">Dataset Information</h4>';
+                        html += '<div style="background: white; padding: 15px; border-radius: 8px; border: 1px solid #e0e0e0;">';
+                        html += `<div style="margin-bottom: 8px;"><strong>Total Samples:</strong> ${data.dataset_info.total_samples.toLocaleString()}</div>`;
+                        html += `<div style="margin-bottom: 8px;"><strong>Training Samples:</strong> ${data.dataset_info.train_samples.toLocaleString()}</div>`;
+                        html += `<div style="margin-bottom: 8px;"><strong>Test Samples:</strong> ${data.dataset_info.test_samples.toLocaleString()}</div>`;
+                        html += `<div><strong>Classes:</strong> ${data.dataset_info.classes.join(', ')}</div>`;
+                        html += '</div>';
+                    }
+                    
+                    html += '</div>';
+                    metricsDiv.innerHTML = html;
+                }
+                
+                metricsDiv.style.display = 'block';
+                
+            } catch (error) {
+                metricsDiv.innerHTML = `
+                    <div style="color: red; padding: 15px; background: #ffebee; border-radius: 8px;">
+                        Error loading metrics: ${error.message}<br>
+                        Make sure the API server is running and you've trained the model.
+                    </div>
+                `;
+                metricsDiv.style.display = 'block';
+            } finally {
+                loadBtn.disabled = false;
+                loadBtn.textContent = 'Load Metrics';
+            }
+        }
+    </script>
+</body>
+</html>
+

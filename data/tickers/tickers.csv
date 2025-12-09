@@ -1,0 +1,35 @@
+symbol,exchange,name,sector,market_cap_b
+AAPL,NASDAQ,Apple Inc.,Technology,3000
+MSFT,NASDAQ,Microsoft Corporation,Technology,2800
+GOOGL,NASDAQ,Alphabet Inc.,Technology,1800
+AMZN,NASDAQ,Amazon.com Inc.,Consumer Discretionary,1500
+META,NASDAQ,Meta Platforms Inc.,Communication Services,1200
+NVDA,NASDAQ,NVIDIA Corporation,Technology,2000
+TSLA,NASDAQ,Tesla Inc.,Consumer Discretionary,800
+AVGO,NASDAQ,Broadcom Inc.,Technology,600
+ORCL,NYSE,Oracle Corporation,Technology,400
+CRM,NYSE,Salesforce Inc.,Technology,250
+AMD,NASDAQ,Advanced Micro Devices,Technology,300
+INTC,NASDAQ,Intel Corporation,Technology,200
+CSCO,NASDAQ,Cisco Systems Inc.,Technology,200
+IBM,NYSE,International Business Machines,Technology,150
+QCOM,NASDAQ,Qualcomm Inc.,Technology,180
+JPM,NYSE,JPMorgan Chase & Co.,Financial,500
+BAC,NYSE,Bank of America Corp.,Financial,300
+WFC,NYSE,Wells Fargo & Company,Financial,180
+GS,NYSE,Goldman Sachs Group Inc.,Financial,130
+MS,NYSE,Morgan Stanley,Financial,150
+C,NYSE,Citigroup Inc.,Financial,120
+JNJ,NYSE,Johnson & Johnson,Healthcare,400
+UNH,NYSE,UnitedHealth Group Inc.,Healthcare,500
+PFE,NYSE,Pfizer Inc.,Healthcare,150
+ABBV,NYSE,AbbVie Inc.,Healthcare,300
+LLY,NYSE,Eli Lilly and Company,Healthcare,600
+WMT,NYSE,Walmart Inc.,Consumer Staples,450
+PG,NYSE,Procter & Gamble Co.,Consumer Staples,350
+KO,NYSE,The Coca-Cola Company,Consumer Staples,270
+PEP,NASDAQ,PepsiCo Inc.,Consumer Staples,240
+HD,NYSE,The Home Depot Inc.,Consumer Discretionary,400
+MCD,NYSE,McDonald's Corporation,Consumer Discretionary,200
+XOM,NYSE,Exxon Mobil Corporation,Energy,450
+CVX,NYSE,Chevron Corporation,Energy,300
